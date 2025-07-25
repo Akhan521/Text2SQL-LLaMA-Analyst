@@ -36,15 +36,15 @@ def train_model(model_name: str = "NousResearch/Llama-2-7b-hf", dataset_name: st
     model = get_peft_model(model, peft_config)
 
     training_args = TrainingArguments(
-        output_dir = "fine_tuning",
+        output_dir = "logs",
         per_device_train_batch_size = 1,
         gradient_accumulation_steps = 4, # Simulate a larger batch size.
         num_train_epochs = 1,
         learning_rate = 2e-4,
         fp16 = True,
-        optim = "paged_adamw_8bit",      # Use 8-bit AdamW optimizer for memory efficiency.
+        optim = "paged_adamw_8bit" if quantized else "adamw_torch", # Use 8-bit AdamW for quantized models.
         lr_scheduler_type = "cosine",
-        warmup_ratio = 0.05,             # To avoid exploding gradients.
+        warmup_ratio = 0.05, # To avoid exploding gradients.
         report_to='none'
     )
     
@@ -56,7 +56,7 @@ def train_model(model_name: str = "NousResearch/Llama-2-7b-hf", dataset_name: st
     )
 
     trainer.train()  # Start training the model.
-    trainer.save_model("./trained_model") 
+    trainer.save_model(training_args.output_dir)
 
 if __name__ == "__main__":
 
