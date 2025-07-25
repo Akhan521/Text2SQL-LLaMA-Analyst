@@ -40,7 +40,6 @@ def generate(prompt: str, model: PreTrainedModel, tokenizer: PreTrainedTokenizer
     '''
     model.config.use_cache = True           # Enable cache for generation to speed up inference.
     model.gradient_checkpointing_disable()  # Disable gradient checkpointing for generation.
-    model.to(device)
     model.eval()
 
     generation_config = configure_generation(model, tokenizer)
