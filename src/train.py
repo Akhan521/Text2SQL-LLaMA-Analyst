@@ -2,6 +2,8 @@ from transformers import Trainer, TrainingArguments
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
 from src.data_loader import load_data, preprocess_dataset
 from src.model_loader import load_model, load_tokenizer
+import transformers
+import torch
 
 def train_model(model_name: str = "NousResearch/Llama-2-7b-hf", dataset_name: str = "ChrisHayduk/Llama-2-SQL-Dataset", quantized: bool = True) -> None:
     '''
@@ -30,7 +32,8 @@ def train_model(model_name: str = "NousResearch/Llama-2-7b-hf", dataset_name: st
     )
 
     # Prepare the model for k-bit training (for quantization).
-    model = prepare_model_for_kbit_training(model)
+    if quantized and torch.cuda.is_available():
+        model = prepare_model_for_kbit_training(model)
 
     # Apply LoRA to the model.
     model = get_peft_model(model, peft_config)
@@ -41,7 +44,7 @@ def train_model(model_name: str = "NousResearch/Llama-2-7b-hf", dataset_name: st
         gradient_accumulation_steps = 4, # Simulate a larger batch size.
         num_train_epochs = 1,
         learning_rate = 2e-4,
-        fp16 = True,
+        fp16 = quantized,
         optim = "paged_adamw_8bit" if quantized else "adamw_torch", # Use 8-bit AdamW for quantized models.
         lr_scheduler_type = "cosine",
         warmup_ratio = 0.05, # To avoid exploding gradients.
@@ -57,11 +60,14 @@ def train_model(model_name: str = "NousResearch/Llama-2-7b-hf", dataset_name: st
 
     trainer.train()  # Start training the model.
     trainer.save_model(training_args.output_dir)
+    tokenizer.save_pretrained(training_args.output_dir)
 
 if __name__ == "__main__":
 
     model_name = "NousResearch/Llama-2-7b-hf"
     dataset_name = "ChrisHayduk/Llama-2-SQL-Dataset"
 
-    train_model(model_name, dataset_name, quantized=True)  # Start the training process.
+    # For CPU training, set quantized to False. For GPU training, set it to True.
+    quantized = torch.cuda.is_available()
+    train_model(model_name, dataset_name, quantized=quantized)
     print("Training complete. Model saved to './logs'.")
