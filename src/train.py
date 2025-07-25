@@ -64,4 +64,4 @@ if __name__ == "__main__":
     dataset_name = "ChrisHayduk/Llama-2-SQL-Dataset"
 
     train_model(model_name, dataset_name, quantized=True)  # Start the training process.
-    print("Training complete. Model saved to './trained_model'.")
+    print("Training complete. Model saved to './logs'.")

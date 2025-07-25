@@ -18,7 +18,7 @@ def configure_generation(model: PreTrainedModel, tokenizer: PreTrainedTokenizer)
 
     generation_config.pad_token_id = tokenizer.eos_token_id
     generation_config.eos_token_id = tokenizer.eos_token_id
-    generation_config.max_new_tokens = 256
+    generation_config.max_new_tokens = 20 # Lowered to 20 for faster inference.
     generation_config.temperature = 0.7
     generation_config.top_p = 0.9
     generation_config.do_sample = True
@@ -50,5 +50,5 @@ def generate(prompt: str, model: PreTrainedModel, tokenizer: PreTrainedTokenizer
             generation_config = generation_config,
             repetition_penalty = 2.0,
         )
-    decoded_string = tokenizer.decode(output[0], clean_up_tokenization_spaces = True)
+    decoded_string = tokenizer.decode(output[0], clean_up_tokenization_spaces = True, skip_special_tokens = True)
     return decoded_string
