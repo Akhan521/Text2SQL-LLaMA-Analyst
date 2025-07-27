@@ -14,14 +14,15 @@ def configure_generation(model: PreTrainedModel, tokenizer: PreTrainedTokenizer)
     Returns:
         GenerationConfig: The configured generation settings.
     '''
-    generation_config = GenerationConfig.from_pretrained(model.name_or_path)
+    generation_config = GenerationConfig()
 
     generation_config.pad_token_id = tokenizer.eos_token_id
     generation_config.eos_token_id = tokenizer.eos_token_id
-    generation_config.max_new_tokens = 20 # Lowered to 20 for faster inference.
+    generation_config.max_new_tokens = 50
     generation_config.temperature = 0.7
     generation_config.top_p = 0.9
     generation_config.do_sample = True
+    generation_config.use_cache = False
 
     return generation_config
 
@@ -38,7 +39,7 @@ def generate(prompt: str, model: PreTrainedModel, tokenizer: PreTrainedTokenizer
     Returns:
         str: The generated text.
     '''
-    model.config.use_cache = True           # Enable cache for generation to speed up inference.
+    model.config.use_cache = False  # Peft models require this to be set to False.
     model.gradient_checkpointing_disable()  # Disable gradient checkpointing for generation.
     model.eval()
 
@@ -48,7 +49,12 @@ def generate(prompt: str, model: PreTrainedModel, tokenizer: PreTrainedTokenizer
         output = model.generate(
             input_ids = encoded_prompt,
             generation_config = generation_config,
-            repetition_penalty = 2.0,
+            repetition_penalty = 1.2
         )
     decoded_string = tokenizer.decode(output[0], clean_up_tokenization_spaces = True, skip_special_tokens = True)
+
+    # Remove the prompt from the generated text.
+    if prompt in decoded_string:
+        decoded_string = decoded_string.replace(prompt, "").strip()
+
     return decoded_string
