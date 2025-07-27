@@ -18,7 +18,7 @@ def configure_generation(model: PreTrainedModel, tokenizer: PreTrainedTokenizer)
 
     generation_config.pad_token_id = tokenizer.eos_token_id
     generation_config.eos_token_id = tokenizer.eos_token_id
-    generation_config.max_new_tokens = 50
+    generation_config.max_new_tokens = 256
     generation_config.temperature = 0.7
     generation_config.top_p = 0.9
     generation_config.do_sample = True
